@@ -1,0 +1,8 @@
+*.gob
+*.png
+.sam/
+masters*
+mc*
+r
+reset
+stop
