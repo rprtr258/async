@@ -12,20 +12,16 @@ func NewAsync[T any](get func() T) Promise[T] {
 	return Promise[T]{ch}
 }
 
-func (p Promise[T]) await() <-chan T {
-	return p.ch
-}
-
 func (p Promise[T]) Await() T {
 	return <-p.ch
 }
 
-func Select[T any](ps ...interface{ await() <-chan T }) (int, T) {
+func Select[T any](ps ...Promise[T]) (int, T) {
 	cases := make([]reflect.SelectCase, len(ps))
 	for i, p := range ps {
 		cases[i] = reflect.SelectCase{
 			Dir:  reflect.SelectRecv,
-			Chan: reflect.ValueOf(p.await()),
+			Chan: reflect.ValueOf(p.ch),
 		}
 	}
 	i, val, _ := reflect.Select(cases)
