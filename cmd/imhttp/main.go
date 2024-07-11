@@ -15,9 +15,15 @@ import (
 func main() {
 	const addr = ":8080"
 	fmt.Fprintln(os.Stderr, "listening on", addr)
+	terminate := imhttp.NotifySignals(os.Interrupt)
 	appSrv := imhttp.Run(addr)
 	metricsSrv := imhttp.Run(":9000")
 	for {
+		// TODO: select from signal and servers altogether, add timer example
+		if _, ok := terminate.TryAwait(); ok {
+			break
+		}
+
 		i, req := imhttp.Select(appSrv, metricsSrv)
 		switch i {
 		case 0: // app
@@ -25,14 +31,16 @@ func main() {
 			log.Println("REQUEST:")
 			log.Println(string(b))
 			http.NotFound(req.Response, req.Request)
+			// do not forget to finish processing request
+			req.Done()
 		case 1: // metric
 			if req.URL.Path == "/" {
 				log.Println("GET METRICS")
 				fmt.Fprintln(req.Response, time.Now().String())
 			}
+			// do not forget to finish processing request
+			req.Done()
 		}
-		// do not forget to finish processing request
-		req.Done()
 	}
 }
 

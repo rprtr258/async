@@ -16,6 +16,15 @@ func (p Promise[T]) Await() T {
 	return <-p.ch
 }
 
+func (p Promise[T]) TryAwait() (T, bool) {
+	select {
+	case t := <-p.ch:
+		return t, true
+	default:
+		return *new(T), false
+	}
+}
+
 func Select[T any](ps ...Promise[T]) (int, T) {
 	cases := make([]reflect.SelectCase, len(ps))
 	for i, p := range ps {
