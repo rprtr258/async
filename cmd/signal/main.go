@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"syscall"
 
-	"github.com/rprtr258/imhttp/signal"
+	"github.com/rprtr258/imhttp"
 )
 
 func main() {
-	for sig := range signal.New(syscall.SIGINT, syscall.SIGTERM) {
+	for sigs := imhttp.NotifySignals(syscall.SIGINT, syscall.SIGTERM); ; {
+		sig := sigs.Await()
 		fmt.Println(sig.String(), int(sig.(syscall.Signal)))
 	}
 }
