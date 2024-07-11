@@ -10,16 +10,17 @@ import (
 type Request struct {
 	*http.Request
 	Response http.ResponseWriter
-	done     <-chan struct{}
+	done     chan<- struct{}
 }
 
-func (c Request) Done() {
-	<-c.done
+func (r Request) Done() {
+	r.done <- struct{}{}
 }
 
-func Run(addr string) <-chan Request {
+func Run(addr string) Promise[Request] {
 	res := make(chan Request)
 	go func() {
+		defer close(res)
 		err := func() error {
 			ln, err := net.Listen("tcp", addr)
 			if err != nil {
@@ -36,13 +37,13 @@ func Run(addr string) <-chan Request {
 						Response: w,
 						done:     doneCh,
 					}
-					doneCh <- struct{}{}
+					// wait till processing done
+					<-doneCh
 				}),
 			}
 			return server.Serve(ln)
 		}()
 		fmt.Fprintln(os.Stderr, err.Error())
-		close(res)
 	}()
-	return res
+	return Promise[Request]{res}
 }
