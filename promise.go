@@ -41,6 +41,8 @@ func (p Promise[T]) TryAwait() (T, bool) {
 	}
 }
 
+// TODO: remove T result, instead just return index of promise,
+// awaiting which would not block (HOW BLYAT)
 func Select[T any](ps ...Promise[T]) (int, T) {
 	cases := make([]reflect.SelectCase, len(ps))
 	for i, p := range ps {
