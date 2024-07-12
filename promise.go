@@ -6,10 +6,26 @@ type Promise[T any] struct {
 	ch <-chan T
 }
 
+func NewInstant[T any](value T) Promise[T] {
+	return NewAsync(func() T {
+		return value
+	})
+}
+
 func NewAsync[T any](get func() T) Promise[T] {
 	ch := make(chan T)
 	go func() { ch <- get() }()
 	return Promise[T]{ch}
+}
+
+func Map[T, R any](p Promise[T], fn func(T) R) Promise[R] {
+	return NewAsync(func() R {
+		return fn(p.Await())
+	})
+}
+
+func FlatMap[T, R any](p Promise[T], fn func(T) Promise[R]) Promise[R] {
+	return fn(p.Await())
 }
 
 func (p Promise[T]) Await() T {
