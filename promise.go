@@ -41,8 +41,17 @@ func (p Future[T]) TryAwait() (T, bool) {
 	}
 }
 
+func Join[T any](fs ...Future[T]) []T {
+	res := make([]T, len(fs))
+	for i, f := range fs {
+		res[i] = f.Await()
+	}
+	return res
+}
+
 // TODO: remove T result, instead just return index of promise,
 // awaiting which would not block (HOW BLYAT)
+// TODO: how to use correctly?
 func Select[T any](fs ...Future[T]) (int, T) {
 	cases := make([]reflect.SelectCase, len(fs))
 	for i, f := range fs {
@@ -55,10 +64,25 @@ func Select[T any](fs ...Future[T]) (int, T) {
 	return i, val.Interface().(T)
 }
 
-func Join[T any](fs ...Future[T]) []T {
-	res := make([]T, len(fs))
-	for i, f := range fs {
-		res[i] = f.Await()
+// TODO: how to use correctly?
+func Select2[A, B any](
+	fa Future[A], funa func(A),
+	fb Future[B], funb func(B),
+) {
+	i, val, _ := reflect.Select([]reflect.SelectCase{
+		{
+			Dir:  reflect.SelectRecv,
+			Chan: reflect.ValueOf(fa.ch),
+		},
+		{
+			Dir:  reflect.SelectRecv,
+			Chan: reflect.ValueOf(fb.ch),
+		},
+	})
+	switch i {
+	case 0:
+		funa(val.Interface().(A))
+	case 1:
+		funb(val.Interface().(B))
 	}
-	return res
 }
