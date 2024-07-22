@@ -17,7 +17,7 @@ func (r Request) Done() {
 	r.done <- struct{}{}
 }
 
-func Run(addr string) Promise[Request] {
+func Run(addr string) Future[Request] {
 	res := make(chan Request)
 	go func() {
 		defer close(res)
@@ -45,7 +45,7 @@ func Run(addr string) Promise[Request] {
 		}()
 		fmt.Fprintln(os.Stderr, err.Error())
 	}()
-	return Promise[Request]{res}
+	return Future[Request]{res}
 }
 
 func RunIter(addr string) func(func(Request) bool) {

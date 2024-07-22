@@ -5,8 +5,8 @@ import (
 	"os/signal"
 )
 
-func NotifySignals(signals ...os.Signal) Promise[os.Signal] {
+func NotifySignals(signals ...os.Signal) Future[os.Signal] {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, signals...)
-	return Promise[os.Signal]{ch}
+	return Future[os.Signal]{ch}
 }

@@ -5,7 +5,12 @@ import (
 	"net/url"
 )
 
-func Get(url url.URL) Promise[Result[*http.Response]] {
+type Result[T any] struct {
+	Value T
+	Error error
+}
+
+func Get(url url.URL) Future[Result[*http.Response]] {
 	return NewAsync(func() Result[*http.Response] {
 		resp, err := http.Get(url.String())
 		return Result[*http.Response]{resp, err}
