@@ -2,6 +2,7 @@ package imhttp
 
 import "reflect"
 
+// actually is just 1-buffered channel which should be received once
 type Future[T any] struct {
 	ch <-chan T
 }
@@ -51,6 +52,12 @@ func Join[T any](fs ...Future[T]) []T {
 		res[i] = f.Await()
 	}
 	return res
+}
+
+func Flatten[T any](fs ...Future[T]) Future[[]T] {
+	return NewFuture(func() []T {
+		return Join(fs...)
+	})
 }
 
 // TODO: remove T result, instead just return index of promise,
