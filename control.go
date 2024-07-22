@@ -3,7 +3,7 @@ package imhttp
 import "fmt"
 
 func While(cond func() bool) Future[bool] {
-	return NewAsync(cond)
+	return NewFuture(cond)
 }
 
 func exampleWhile() {
@@ -24,7 +24,7 @@ func (m maybe[T]) Unpack() (T, bool) {
 }
 
 func While2[T any](cond func() bool, get func() T) Future[maybe[T]] {
-	return NewAsync(func() maybe[T] {
+	return NewFuture(func() maybe[T] {
 		if cond() {
 			return maybe[T]{get(), true}
 		}
@@ -47,7 +47,7 @@ func exampleWhile2() {
 
 func If(cond bool) Future[bool] {
 	first := true
-	return NewAsync(func() bool {
+	return NewFuture(func() bool {
 		if first {
 			first = false
 			return cond

@@ -6,26 +6,30 @@ type Future[T any] struct {
 	ch <-chan T
 }
 
-func NewInstant[T any](value T) Future[T] {
-	return NewAsync(func() T {
+func NewReady[T any](value T) Future[T] {
+	return NewFuture(func() T {
 		return value
 	})
 }
 
-func NewAsync[T any](get func() T) Future[T] {
+func NewFuture[T any](get func() T) Future[T] {
 	ch := make(chan T, 1)
 	go func() { ch <- get(); close(ch) }()
 	return Future[T]{ch}
 }
 
 func Map[T, R any](p Future[T], fn func(T) R) Future[R] {
-	return NewAsync(func() R {
+	return NewFuture(func() R {
 		return fn(p.Await())
 	})
 }
 
 func FlatMap[T, R any](p Future[T], fn func(T) Future[R]) Future[R] {
 	return fn(p.Await())
+}
+
+func (p Future[T]) Raw() <-chan T {
+	return p.ch
 }
 
 func (p Future[T]) Await() T {
@@ -84,5 +88,34 @@ func Select2[A, B any](
 		funa(val.Interface().(A))
 	case 1:
 		funb(val.Interface().(B))
+	}
+}
+
+// TODO: how to use correctly?
+func Select2D[A, B any](
+	fa Future[A], funa func(A),
+	fb Future[B], funb func(B),
+	fundef func(),
+) {
+	i, val, _ := reflect.Select([]reflect.SelectCase{
+		{
+			Dir:  reflect.SelectRecv,
+			Chan: reflect.ValueOf(fa.ch),
+		},
+		{
+			Dir:  reflect.SelectRecv,
+			Chan: reflect.ValueOf(fb.ch),
+		},
+		{
+			Dir: reflect.SelectDefault,
+		},
+	})
+	switch i {
+	case 0:
+		funa(val.Interface().(A))
+	case 1:
+		funb(val.Interface().(B))
+	case 2:
+		fundef()
 	}
 }
