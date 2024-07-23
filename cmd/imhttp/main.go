@@ -68,8 +68,9 @@ func main2() {
 	counters := map[string]int{}
 	addr := ":8080"
 	fmt.Fprintln(os.Stderr, "listening on", addr)
-	for reqs := http.Run(addr); ; {
-		req := reqs.Next().Await().Unwrap()
+	http.Run(addr).ForEachConcurrent(func(req http.Request) Future[struct{}] {
+		defer req.Done() // do not forget to finish processing request
+
 		switch req.URL.Path {
 		case "/get":
 			name := req.URL.Query().Get("name")
@@ -87,7 +88,6 @@ func main2() {
 			log.Println(string(b))
 			stdhttp.NotFound(req.Response, req.Request)
 		}
-		// do not forget to finish processing request
-		req.Done()
-	}
+		return NewReady(struct{}{})
+	})
 }
