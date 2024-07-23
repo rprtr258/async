@@ -29,7 +29,6 @@ func main() {
 			b, _ := httputil.DumpRequest(req.Request, true)
 			log.Println("REQUEST:")
 			log.Println(string(b))
-			// stdhttp.NotFound(req.Response, req.Request)
 			req.Response.Header().Set("Content-Type", "text/plain; charset=utf-8")
 			req.Response.Header().Set("X-Content-Type-Options", "nosniff")
 			req.Response.WriteHeader(stdhttp.StatusOK)
@@ -52,34 +51,10 @@ func main() {
 	}
 
 	s := NewFutureSet[struct{}]()
-	// TODO: select from signal and servers altogether, add timer example
-	// TODO: merge streams, closing closed ones
-	// i, _ := Select( /*terminate,*/ appReq /*metricsReq*/)
+	// TODO: add timer example
 	s.Push(terminate)
-	var appNext func() Future[struct{}]
-	appNext = func() Future[struct{}] {
-		return NewFuture(func() struct{} {
-			req, ok := appSrv.Next().Await().Unpack()
-			if ok {
-				s.Push(appHandler(req))
-				s.Push(appNext())
-			}
-			return struct{}{}
-		})
-	}
-	s.Push(appNext())
-	var metricsNext func() Future[struct{}]
-	metricsNext = func() Future[struct{}] {
-		return NewFuture(func() struct{} {
-			req, ok := metricsSrv.Next().Await().Unpack()
-			if ok {
-				s.Push(metricsHandler(req))
-				s.Push(metricsNext())
-			}
-			return struct{}{}
-		})
-	}
-	s.Push(metricsNext())
+	s.PushStream(appSrv.Then(appHandler))
+	s.PushStream(metricsSrv.Then(metricsHandler))
 	ss := s.Stream()
 	for {
 		if _, ok := ss.Next().Await().Unpack(); !ok {
