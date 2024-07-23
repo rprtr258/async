@@ -3,7 +3,7 @@ package net
 import (
 	"net"
 
-	. "github.com/rprtr258/imhttp"
+	. "github.com/rprtr258/async"
 )
 
 type Conn struct{ net.Conn }

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"net/url"
 
-	. "github.com/rprtr258/imhttp"
+	. "github.com/rprtr258/async"
 )
 
 func Get(url url.URL) Future[Result[*http.Response]] {

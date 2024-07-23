@@ -1,4 +1,4 @@
-module github.com/rprtr258/imhttp
+module github.com/rprtr258/async
 
 go 1.22.2
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"syscall"
 
-	"github.com/rprtr258/imhttp"
+	imhttp "github.com/rprtr258/async"
 )
 
 func main() {

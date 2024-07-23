@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	. "github.com/rprtr258/imhttp"
-	"github.com/rprtr258/imhttp/net/http"
+	. "github.com/rprtr258/async"
+	"github.com/rprtr258/async/net/http"
 )
 
 func main() {

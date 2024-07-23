@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	. "github.com/rprtr258/imhttp"
+	. "github.com/rprtr258/async"
 )
 
 type Request struct {

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"strconv"
 
-	. "github.com/rprtr258/imhttp"
-	"github.com/rprtr258/imhttp/net"
+	. "github.com/rprtr258/async"
+	"github.com/rprtr258/async/net"
 )
 
 func unwrap[T any](res T, err error) T {
