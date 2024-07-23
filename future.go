@@ -1,6 +1,8 @@
 package imhttp
 
-import "reflect"
+import (
+	"reflect"
+)
 
 // actually is just 1-buffered channel which should be received once
 type Future[T any] struct {

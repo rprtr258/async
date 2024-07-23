@@ -72,6 +72,17 @@ type Option[T any] struct {
 	Valid bool
 }
 
+func (o Option[T]) Unwrap() T {
+	if !o.Valid {
+		panic("value is not valid")
+	}
+	return o.Value
+}
+
+func (o Option[T]) Unpack() (T, bool) {
+	return o.Value, o.Valid
+}
+
 func (s Stream[T]) Next() Future[Option[T]] {
 	return NewFuture(func() Option[T] {
 		value, ok := <-s.ch
@@ -96,5 +107,15 @@ func (s Stream[T]) ForEachConcurrent(fn func(T) Future[struct{}]) Future[struct{
 			f.Await()
 		})
 		return struct{}{}
+	})
+}
+
+func (s Stream[T]) Then(fn func(T) Future[struct{}]) Stream[struct{}] {
+	return NewGenerator(func() (struct{}, bool) {
+		o := s.Next().Await()
+		if !o.Valid {
+			return struct{}{}, false
+		}
+		return fn(o.Value).Await(), true
 	})
 }

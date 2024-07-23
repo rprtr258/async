@@ -2,10 +2,10 @@ package main
 
 import (
 	"bytes"
-	"net"
 	"strconv"
 
 	. "github.com/rprtr258/imhttp"
+	"github.com/rprtr258/imhttp/net"
 )
 
 func unwrap[T any](res T, err error) T {
@@ -13,31 +13,6 @@ func unwrap[T any](res T, err error) T {
 		panic(err)
 	}
 	return res
-}
-
-type netConn struct{ net.Conn }
-
-func (c netConn) Read(b []byte) Future[Result[int]] {
-	return NewFuture(func() Result[int] {
-		return NewResult(c.Conn.Read(b))
-	})
-}
-
-func (c netConn) Write(b []byte) Future[Result[int]] {
-	return NewFuture(func() Result[int] {
-		return NewResult(c.Conn.Write(b))
-	})
-}
-
-func netListen(network, addr string) Result[Stream[netConn]] {
-	listener, err := net.Listen(network, addr)
-	if err != nil {
-		return Err[Stream[netConn]](err)
-	}
-	return Ok(NewGenerator(func() (netConn, bool) {
-		conn, err := listener.Accept()
-		return netConn{conn}, err == nil
-	}))
 }
 
 const (
@@ -67,7 +42,7 @@ const (
 `
 )
 
-func handle_connection(stream netConn) Future[struct{}] {
+func handle_connection(stream net.Conn) Future[struct{}] {
 	return NewFuture(func() struct{} {
 		defer stream.Close()
 
@@ -97,8 +72,8 @@ func handle_connection(stream netConn) Future[struct{}] {
 }
 
 func main() {
-	listener := netListen("tcp", "127.0.0.1:7878").Unwrap()
-	listener.ForEachConcurrent(func(conn netConn) Future[struct{}] {
+	listener := net.Listen("tcp", "127.0.0.1:7878").Unwrap()
+	listener.ForEachConcurrent(func(conn net.Conn) Future[struct{}] {
 		return handle_connection(conn)
 	}).Await()
 }
