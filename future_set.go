@@ -20,6 +20,21 @@ func (fs *FutureSet[T]) Push(f Future[T]) {
 	fs.data = append(fs.data, f)
 }
 
+func (fs *FutureSet[T]) PushStream(s Stream[T]) {
+	var next func() Future[T]
+	next = func() Future[T] {
+		return NewFuture(func() T {
+			req, ok := s.Next().Await().Unpack()
+			if ok {
+				fs.Push(NewReady(req))
+				fs.Push(next())
+			}
+			return req
+		})
+	}
+	fs.Push(next())
+}
+
 func (fs *FutureSet[T]) IntoIter() func(func(Future[T])) {
 	return func(yield func(Future[T])) {
 		for len(fs.data) > 0 {
