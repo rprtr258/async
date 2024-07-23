@@ -3,7 +3,7 @@ package circular
 import (
 	"unsafe"
 
-	. "sems/std"
+	. "github.com/rprtr258/async/sems/std"
 )
 
 const PageSize = 4096

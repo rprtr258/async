@@ -2,13 +2,14 @@ package main
 
 import (
 	"encoding/gob"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
 	"unsafe"
 
-	. "sems/http"
-	. "sems/std"
+	. "github.com/rprtr258/async/sems/http"
+	. "github.com/rprtr258/async/sems/std"
 )
 
 type (
@@ -1075,7 +1076,7 @@ func SubmissionDiscardHandler(w *HTTPResponse, r *HTTPRequest) error {
 	}
 	lesson.Submissions = RemoveAtIndex(lesson.Submissions, si)
 
-	w.RedirectID("/subject/", subjectID, HTTPStatusSeeOther)
+	w.RedirectID("/subject/", subjectID, http.StatusSeeOther)
 	return nil
 }
 
@@ -1138,6 +1139,6 @@ func SubmissionNewHandler(w *HTTPResponse, r *HTTPRequest) error {
 	// SubmissionVerifyChannel <- submission
 	SubmissionVerify(submission)
 
-	w.RedirectID("/subject/", subjectID, HTTPStatusSeeOther)
+	w.RedirectID("/subject/", subjectID, http.StatusSeeOther)
 	return nil
 }

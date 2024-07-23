@@ -1,6 +1,6 @@
 package main
 
-import . "sems/http"
+import . "github.com/rprtr258/async/sems/http"
 
 func WritePage(w *HTTPResponse, r *HTTPRequest, page func(*HTTPResponse, *HTTPRequest) error, err error) error {
 	e := err.(HTTPError)

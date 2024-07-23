@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/gob"
 
-	. "sems/http"
+	. "github.com/rprtr258/async/sems/http"
 )
 
 type (

@@ -1,4 +1,4 @@
-# SEMS - Smart Education Management System
+# github.com/rprtr258/async/sems - Smart Education Management System
 
 ## Copyright
 

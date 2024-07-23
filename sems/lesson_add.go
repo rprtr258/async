@@ -4,8 +4,8 @@ import (
 	"net/url"
 	"unsafe"
 
-	. "sems/http"
-	. "sems/std"
+	. "github.com/rprtr258/async/sems/http"
+	. "github.com/rprtr258/async/sems/std"
 )
 
 const (

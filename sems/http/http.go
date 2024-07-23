@@ -3,6 +3,7 @@ package http
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"runtime"
 	"strconv"
@@ -10,10 +11,10 @@ import (
 	"time"
 	"unsafe"
 
-	"sems/alloc/arena"
-	"sems/alloc/pool"
-	"sems/circular"
-	. "sems/std"
+	"github.com/rprtr258/async/sems/alloc/arena"
+	"github.com/rprtr258/async/sems/alloc/pool"
+	"github.com/rprtr258/async/sems/circular"
+	. "github.com/rprtr258/async/sems/std"
 )
 
 const RFC822Len = 31
@@ -62,60 +63,30 @@ type HTTPRequestParser struct {
 	ContentLength int
 }
 
-type HTTPStatus int
-
-const (
-	HTTPStatusOK                    HTTPStatus = 200
-	HTTPStatusSeeOther                         = 303
-	HTTPStatusBadRequest                       = 400
-	HTTPStatusUnauthorized                     = 401
-	HTTPStatusForbidden                        = 403
-	HTTPStatusNotFound                         = 404
-	HTTPStatusMethodNotAllowed                 = 405
-	HTTPStatusRequestTimeout                   = 408
-	HTTPStatusConflict                         = 409
-	HTTPStatusRequestEntityTooLarge            = 413
-	HTTPStatusInternalServerError              = 500
-)
-
 var Status2String = [...]string{
-	HTTPStatusOK:                    "200",
-	HTTPStatusSeeOther:              "303",
-	HTTPStatusBadRequest:            "400",
-	HTTPStatusUnauthorized:          "401",
-	HTTPStatusForbidden:             "403",
-	HTTPStatusNotFound:              "404",
-	HTTPStatusMethodNotAllowed:      "405",
-	HTTPStatusRequestTimeout:        "408",
-	HTTPStatusConflict:              "409",
-	HTTPStatusRequestEntityTooLarge: "413",
-	HTTPStatusInternalServerError:   "500",
-}
-
-var Status2Reason = [...]string{
-	HTTPStatusOK:                    "OK",
-	HTTPStatusSeeOther:              "See Other",
-	HTTPStatusBadRequest:            "Bad Request",
-	HTTPStatusUnauthorized:          "Unauthorized",
-	HTTPStatusForbidden:             "Forbidden",
-	HTTPStatusNotFound:              "Not Found",
-	HTTPStatusMethodNotAllowed:      "Method Not Allowed",
-	HTTPStatusRequestTimeout:        "Request Timeout",
-	HTTPStatusConflict:              "Conflict",
-	HTTPStatusRequestEntityTooLarge: "Request Entity Too Large",
-	HTTPStatusInternalServerError:   "Internal Server Error",
+	http.StatusOK:                    "200",
+	http.StatusSeeOther:              "303",
+	http.StatusBadRequest:            "400",
+	http.StatusUnauthorized:          "401",
+	http.StatusForbidden:             "403",
+	http.StatusNotFound:              "404",
+	http.StatusMethodNotAllowed:      "405",
+	http.StatusRequestTimeout:        "408",
+	http.StatusConflict:              "409",
+	http.StatusRequestEntityTooLarge: "413",
+	http.StatusInternalServerError:   "500",
 }
 
 type HTTPResponse struct {
 	Arena arena.Arena
 
-	StatusCode HTTPStatus
+	StatusCode int
 	Headers    []Iovec
 	Bodies     []Iovec
 }
 
 type HTTPError struct {
-	StatusCode     HTTPStatus
+	StatusCode     int
 	DisplayMessage string
 	LogError       error
 }
@@ -141,20 +112,18 @@ type HTTPContext struct {
 
 var (
 	UnauthorizedError = HTTPError{
-		StatusCode:     HTTPStatusUnauthorized,
+		StatusCode:     http.StatusUnauthorized,
 		DisplayMessage: "whoops... You have to sign in to see this page",
 		LogError:       NewError("whoops... You have to sign in to see this page"),
 	}
 	ForbiddenError = HTTPError{
-		StatusCode:     HTTPStatusForbidden,
+		StatusCode:     http.StatusForbidden,
 		DisplayMessage: "whoops... Your permissions are insufficient",
 		LogError:       NewError("whoops... Your permissions are insufficient"),
 	}
 )
 
 func (rp *HTTPRequestParser) Parse(request string, r *HTTPRequest) (int, error) {
-	var err error
-
 	for rp.State != HTTPStateDone {
 		switch rp.State {
 		default:
@@ -228,6 +197,7 @@ func (rp *HTTPRequestParser) Parse(request string, r *HTTPRequest) (int, error) 
 
 			if strings.HasPrefix(header, "Content-Length: ") {
 				header = header[len("Content-Length: "):]
+				var err error
 				rp.ContentLength, err = strconv.Atoi(header)
 				if err != nil {
 					return 0, NewError("Bad Request")
@@ -377,13 +347,13 @@ func (w *HTTPResponse) SetHeader(header string, value string) {
 	w.Headers = append(w.Headers, IovecFromBytes(buffer[:n]))
 }
 
-func (w *HTTPResponse) Redirect(path string, code HTTPStatus) {
+func (w *HTTPResponse) Redirect(path string, code int) {
 	w.SetHeader("Location", path)
 	w.Bodies = w.Bodies[:0]
 	w.StatusCode = code
 }
 
-func (w *HTTPResponse) RedirectID(prefix string, id int, code HTTPStatus) {
+func (w *HTTPResponse) RedirectID(prefix string, id int, code int) {
 	buffer := w.Arena.Alloc(len(prefix) + 20)
 	n := copy(buffer, prefix)
 	n += SlicePutInt(buffer[n:], id)
@@ -394,7 +364,7 @@ func (w *HTTPResponse) RedirectID(prefix string, id int, code HTTPStatus) {
 }
 
 func (w *HTTPResponse) Reset() {
-	w.StatusCode = HTTPStatusOK
+	w.StatusCode = http.StatusOK
 	w.Headers = w.Headers[:0]
 	w.Bodies = w.Bodies[:0]
 	w.Arena.Reset()
@@ -464,7 +434,7 @@ func HTTPAppendResponse(wIovs *[]Iovec, w *HTTPResponse, dateIov Iovec) {
 	lengthBuf := w.Arena.Alloc(20)
 	n := SlicePutInt(lengthBuf, length)
 
-	*wIovs = append(*wIovs, IovecFromString("HTTP/1.1"), IovecFromString(" "), IovecFromString(Status2String[w.StatusCode]), IovecFromString(" "), IovecFromString(Status2Reason[w.StatusCode]), IovecFromString("\r\n"))
+	*wIovs = append(*wIovs, IovecFromString("HTTP/1.1"), IovecFromString(" "), IovecFromString(Status2String[w.StatusCode]), IovecFromString(" "), IovecFromString(http.StatusText(w.StatusCode)), IovecFromString("\r\n"))
 	*wIovs = append(*wIovs, w.Headers...)
 	*wIovs = append(*wIovs, IovecFromString("Date: "), dateIov, IovecFromString("\r\n"))
 	*wIovs = append(*wIovs, IovecFromString("Content-Length: "), IovecFromBytes(lengthBuf[:n]), IovecFromString("\r\n"))
@@ -481,25 +451,25 @@ func HTTPAppendResponse(wIovs *[]Iovec, w *HTTPResponse, dateIov Iovec) {
 
 func BadRequest(format string, args ...any) HTTPError {
 	message := fmt.Sprintf(format, args...)
-	return HTTPError{StatusCode: HTTPStatusBadRequest, DisplayMessage: message, LogError: WrapErrorWithTrace(NewError(message), 2)}
+	return HTTPError{StatusCode: http.StatusBadRequest, DisplayMessage: message, LogError: WrapErrorWithTrace(NewError(message), 2)}
 }
 
 func NotFound(format string, args ...any) HTTPError {
 	message := fmt.Sprintf(format, args...)
-	return HTTPError{StatusCode: HTTPStatusNotFound, DisplayMessage: message, LogError: WrapErrorWithTrace(NewError(message), 2)}
+	return HTTPError{StatusCode: http.StatusNotFound, DisplayMessage: message, LogError: WrapErrorWithTrace(NewError(message), 2)}
 }
 
 func Conflict(format string, args ...any) HTTPError {
 	message := fmt.Sprintf(format, args...)
-	return HTTPError{StatusCode: HTTPStatusConflict, DisplayMessage: message, LogError: WrapErrorWithTrace(NewError(message), 2)}
+	return HTTPError{StatusCode: http.StatusConflict, DisplayMessage: message, LogError: WrapErrorWithTrace(NewError(message), 2)}
 }
 
 func ClientError(err error) HTTPError {
-	return HTTPError{StatusCode: HTTPStatusBadRequest, DisplayMessage: "whoops... Something went wrong. Please reload this page or try again later", LogError: WrapErrorWithTrace(err, 2)}
+	return HTTPError{StatusCode: http.StatusBadRequest, DisplayMessage: "whoops... Something went wrong. Please reload this page or try again later", LogError: WrapErrorWithTrace(err, 2)}
 }
 
 func ServerError(err error) HTTPError {
-	return HTTPError{StatusCode: HTTPStatusInternalServerError, DisplayMessage: "whoops... Something went wrong. Please try again later", LogError: WrapErrorWithTrace(err, 2)}
+	return HTTPError{StatusCode: http.StatusInternalServerError, DisplayMessage: "whoops... Something went wrong. Please try again later", LogError: WrapErrorWithTrace(err, 2)}
 }
 
 func (e HTTPError) Error() string {

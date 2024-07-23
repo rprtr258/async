@@ -5,7 +5,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	. "sems/std"
+	. "github.com/rprtr258/async/sems/std"
 )
 
 type EventQueue struct {

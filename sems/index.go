@@ -1,6 +1,6 @@
 package main
 
-import . "sems/http"
+import . "github.com/rprtr258/async/sems/http"
 
 func PageIndexAdmin(w *HTTPResponse, user *User) {
 	w.AppendString(`<h2>Users</h2>`)

@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	. "sems/http"
+	. "github.com/rprtr258/async/sems/http"
 )
 
 func DisplayFormattedTime(w *HTTPResponse, t time.Time) {

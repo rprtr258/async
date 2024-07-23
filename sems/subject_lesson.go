@@ -1,8 +1,10 @@
 package main
 
 import (
-	. "sems/http"
+	"net/http"
 	"strings"
+
+	. "github.com/rprtr258/async/sems/http"
 )
 
 func PageSubjectLesson(w *HTTPResponse, r *HTTPRequest) error {
@@ -241,7 +243,7 @@ func PageSubjectLessonEdit(w *HTTPResponse, r *HTTPRequest) error {
 
 		LessonsDeepCopy(&subject.Lessons, user.Courses[courseID].Lessons)
 
-		w.RedirectID("/subject/", subjectID, HTTPStatusSeeOther)
+		w.RedirectID("/subject/", subjectID, http.StatusSeeOther)
 		return nil
 	}
 
@@ -417,6 +419,6 @@ func SubjectLessonEditHandler(w *HTTPResponse, r *HTTPRequest) error {
 		}
 	}
 
-	w.RedirectID("/subject/", subjectID, HTTPStatusSeeOther)
+	w.RedirectID("/subject/", subjectID, http.StatusSeeOther)
 	return nil
 }

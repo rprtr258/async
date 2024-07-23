@@ -6,9 +6,13 @@ type Pool[T any] struct {
 	Reset   func(*T)
 }
 
-func New[T any](newItem func() (*T, error), reset func(*T)) Pool[T] {
+func New[T any](
+	cap int,
+	newItem func() (*T, error),
+	reset func(*T),
+) Pool[T] {
 	return Pool[T]{
-		Items:   make([]*T, 0, 1024),
+		Items:   make([]*T, 0, cap),
 		NewItem: newItem,
 		Reset:   reset,
 	}

@@ -1,9 +1,10 @@
 package main
 
 import (
+	"net/http"
 	"time"
 
-	. "sems/http"
+	. "github.com/rprtr258/async/sems/http"
 )
 
 const (
@@ -281,7 +282,7 @@ func HandlerGroupCreate(w *HTTPResponse, r *HTTPRequest) error {
 	}
 	DB.Groups = append(DB.Groups, Group{ID: len(DB.Groups), Name: name, Students: students, CreatedOn: time.Now()})
 
-	w.Redirect("/", HTTPStatusSeeOther)
+	w.Redirect("/", http.StatusSeeOther)
 	return nil
 }
 
@@ -321,6 +322,6 @@ func HandlerGroupEdit(w *HTTPResponse, r *HTTPRequest) error {
 	group.Name = name
 	group.Students = students
 
-	w.RedirectID("/group/", groupID, HTTPStatusSeeOther)
+	w.RedirectID("/group/", groupID, http.StatusSeeOther)
 	return nil
 }

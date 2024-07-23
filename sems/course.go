@@ -1,9 +1,11 @@
 package main
 
 import (
+	"net/http"
 	"net/url"
-	. "sems/http"
 	"strings"
+
+	. "github.com/rprtr258/async/sems/http"
 )
 
 type Course struct {
@@ -500,7 +502,7 @@ func CourseCreateEditHandler(w *HTTPResponse, r *HTTPRequest) error {
 	}
 	course.Draft = false
 
-	w.RedirectID("/course/", courseID, HTTPStatusSeeOther)
+	w.RedirectID("/course/", courseID, http.StatusSeeOther)
 	return nil
 }
 
@@ -523,6 +525,6 @@ func HandlerCourseDelete(w *HTTPResponse, r *HTTPRequest) error {
 	/* TODO: this will screw up indicies for courses that are being edited. */
 	user.Courses = RemoveAtIndex(user.Courses, courseID)
 
-	w.Redirect("/", HTTPStatusSeeOther)
+	w.Redirect("/", http.StatusSeeOther)
 	return nil
 }

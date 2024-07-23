@@ -1,12 +1,13 @@
 package main
 
 import (
+	"net/http"
 	"net/mail"
 	"time"
 	"unicode"
 	"unicode/utf8"
 
-	. "sems/http"
+	. "github.com/rprtr258/async/sems/http"
 )
 
 const (
@@ -401,7 +402,7 @@ func HandlerUserCreate(w *HTTPResponse, r *HTTPRequest) error {
 
 	DB.Users = append(DB.Users, User{ID: len(DB.Users), FirstName: firstName, LastName: lastName, Email: email, Password: password, CreatedOn: time.Now()})
 
-	w.Redirect("/", HTTPStatusSeeOther)
+	w.Redirect("/", http.StatusSeeOther)
 	return nil
 }
 
@@ -460,7 +461,7 @@ func HandlerUserEdit(w *HTTPResponse, r *HTTPRequest) error {
 	user.Email = email
 	user.Password = password
 
-	w.RedirectID("/user/", userID, HTTPStatusSeeOther)
+	w.RedirectID("/user/", userID, http.StatusSeeOther)
 	return nil
 }
 
@@ -497,7 +498,7 @@ func HandlerUserSignin(w *HTTPResponse, r *HTTPRequest) error {
 	}
 
 	w.SetCookie("Token", token, expiry)
-	w.Redirect("/", HTTPStatusSeeOther)
+	w.Redirect("/", http.StatusSeeOther)
 	return nil
 }
 
@@ -514,6 +515,6 @@ func HandlerUserSignout(w *HTTPResponse, r *HTTPRequest) error {
 	delete(Sessions, token)
 
 	w.DelCookie("Token")
-	w.Redirect("/", HTTPStatusSeeOther)
+	w.Redirect("/", http.StatusSeeOther)
 	return nil
 }

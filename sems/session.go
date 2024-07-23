@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	. "sems/http"
-	. "sems/std"
+	. "github.com/rprtr258/async/sems/http"
+	. "github.com/rprtr258/async/sems/std"
 )
 
 type Session struct {

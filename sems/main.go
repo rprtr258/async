@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
@@ -11,9 +12,9 @@ import (
 	"time"
 	"unsafe"
 
-	"sems/alloc/pool"
-	. "sems/http"
-	. "sems/std"
+	"github.com/rprtr258/async/sems/alloc/pool"
+	. "github.com/rprtr258/async/sems/http"
+	. "github.com/rprtr258/async/sems/std"
 )
 
 func Page(w *HTTPResponse, r *HTTPRequest, path string) error {
@@ -155,7 +156,7 @@ func Router(w *HTTPResponse, r *HTTPRequest) {
 		if httpError := (HTTPError{}); errors.As(err, &httpError) {
 			w.StatusCode = httpError.StatusCode
 			message = httpError.DisplayMessage
-			if w.StatusCode >= HTTPStatusBadRequest && w.StatusCode < HTTPStatusInternalServerError {
+			if w.StatusCode >= http.StatusBadRequest && w.StatusCode < http.StatusInternalServerError {
 				// 4xx
 				level = "[WARN]"
 			} else {
@@ -176,7 +177,7 @@ func Router(w *HTTPResponse, r *HTTPRequest) {
 }
 
 func run() error {
-	log.Println("[INFO] Starting SEMS")
+	log.Println("[INFO] Starting github.com/rprtr258/async/sems")
 
 	if err := RestoreSessionsFromFile(SessionsFile); err != nil {
 		log.Println("[WARN] Failed to restore sessions from file:", err.Error())
@@ -204,7 +205,7 @@ func run() error {
 		return fmt.Errorf("subscribe to signals: %w", err)
 	}
 
-	ctxPool := pool.New(NewHTTPContext, (*HTTPContext).Reset)
+	ctxPool := pool.New(1024, NewHTTPContext, (*HTTPContext).Reset)
 
 	var quit bool
 	for !quit {

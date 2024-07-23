@@ -1,9 +1,10 @@
 package main
 
 import (
+	"net/http"
 	"time"
 
-	. "sems/http"
+	. "github.com/rprtr258/async/sems/http"
 )
 
 type SubjectUserType int
@@ -494,7 +495,7 @@ func HandlerSubjectCreate(w *HTTPResponse, r *HTTPRequest) error {
 
 	DB.Subjects = append(DB.Subjects, Subject{ID: len(DB.Subjects), Name: name, Teacher: teacher, Group: group, CreatedOn: time.Now()})
 
-	w.Redirect("/", HTTPStatusSeeOther)
+	w.Redirect("/", http.StatusSeeOther)
 	return nil
 }
 
@@ -538,6 +539,6 @@ func HandlerSubjectEdit(w *HTTPResponse, r *HTTPRequest) error {
 	subject.Teacher = teacher
 	subject.Group = group
 
-	w.RedirectID("/subject/", subjectID, HTTPStatusSeeOther)
+	w.RedirectID("/subject/", subjectID, http.StatusSeeOther)
 	return nil
 }
