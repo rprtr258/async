@@ -46,6 +46,13 @@ func (p Future[T]) TryAwait() (T, bool) {
 	}
 }
 
+func (p Future[T]) Then(fn func(T)) Future[struct{}] {
+	return NewFuture(func() struct{} {
+		fn(p.Await())
+		return struct{}{}
+	})
+}
+
 func Join[T any](fs ...Future[T]) []T {
 	res := make([]T, len(fs))
 	for i, f := range fs {

@@ -78,3 +78,23 @@ func (s Stream[T]) Next() Future[Option[T]] {
 		return Option[T]{value, ok}
 	})
 }
+
+func (s Stream[T]) ForEachConcurrent(fn func(T) Future[struct{}]) Future[struct{}] {
+	return NewFuture(func() struct{} {
+		set := NewFutureSet[struct{}]()
+		var next func() Future[struct{}]
+		next = func() Future[struct{}] {
+			return s.Next().Then(func(o Option[T]) {
+				if o.Valid {
+					set.Push(fn(o.Value))
+					set.Push(next())
+				}
+			})
+		}
+		set.Push(next())
+		set.IntoIter()(func(f Future[struct{}]) {
+			f.Await()
+		})
+		return struct{}{}
+	})
+}
